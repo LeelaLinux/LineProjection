@@ -1,0 +1,31 @@
+﻿<Window x:Class="LineProjection.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:LineProjection"
+        xmlns:oxy="http://oxyplot.org/wpf"
+        mc:Ignorable="d"
+        Title="Line Projection">
+    <Grid>
+        <TabControl x:Name="tabControl">
+            <TabItem Header="2x2 Matrix">
+                <Grid Background="#FFE5E5E5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <oxy:PlotView Model="{Binding ControlPlot, UpdateSourceTrigger=PropertyChanged}"  Grid.Column="0"/>
+                    <oxy:PlotView Model="{Binding CoordinateTransform, UpdateSourceTrigger=PropertyChanged}"  Grid.Column="1"/>
+                    <oxy:PlotView Model="{Binding VectorTransform, UpdateSourceTrigger=PropertyChanged}"  Grid.Column="2"/>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Translation">
+                <Grid Background="#FFE5E5E5">
+                    <oxy:PlotView Model="{Binding RotationPlot, UpdateSourceTrigger=PropertyChanged}"/>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>
