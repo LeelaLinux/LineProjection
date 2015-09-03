@@ -17,6 +17,7 @@ namespace LineProjection
         private Vector<double> _theVector = Vector<double>.Build.DenseOfArray(new[] { 0.0, 0.0 });
         private Matrix<double> _transform = Matrix<double>.Build.DenseOfArray(new[,] { { 0.0, 0.0 }, { 0.0, 0.0 } });
         public Projection Projection { get; set; }
+        private Tuple<double, double> _zero = new  Tuple<double, double>(0.0, 0.0);
 
         public int Min { get; set; }
         public int Max { get; set; }
@@ -67,69 +68,68 @@ namespace LineProjection
         /// <returns></returns>
         public IEnumerable<LineSeries> Lines(OneForm oneForm)
         {
-            var point = new Tuple<double, double>(0, 0);
-            while(EntersWindow(point, oneForm))
+            yield return WindowCrossings(oneForm, 0);
+            var length = 1;
+            while(EntersWindow(oneForm, length))
             {
-                var crossings = WindowCrossings(point, oneForm);
-                var lineSeries = new LineSeries();
-                crossings.ForEach(c => lineSeries.Points.Add(new DataPoint(c.Item1, c.Item2)));
-                yield return lineSeries;
-                point = Increment(point, oneForm);
+                yield return WindowCrossings(oneForm, length++);
             }
-            point = new Tuple<double, double>(0, 0);
-            while (EntersWindow(point, oneForm))
+            length = -1;
+            while (EntersWindow(oneForm, length))
             {
-                var crossings = WindowCrossings(point, oneForm);
-                var lineSeries = new LineSeries();
-                crossings.ForEach(c => lineSeries.Points.Add(new DataPoint(c.Item1, c.Item2)));
-                yield return lineSeries;
-                point = Decrement(point, oneForm);
+                yield return WindowCrossings(oneForm, length--);
             }
         }
 
-        private Tuple<double, double> Decrement(Tuple<double, double> point, OneForm xOneForm)
+        private Tuple<double, double> Decrement(OneForm xOneForm, Tuple<double, double> point)
         {
             return new Tuple<double, double>(point.Item1 - xOneForm.UnitVector[0], point.Item2 - xOneForm.UnitVector[1]);
         }
 
-        private Tuple<double, double> Increment(Tuple<double, double> point, OneForm xOneForm)
+        private Tuple<double, double> Increment(OneForm xOneForm, Tuple<double, double> point)
         {
             return new Tuple<double, double>(point.Item1 + xOneForm.UnitVector[0], point.Item2 + xOneForm.UnitVector[1]);
         }
 
-        private List<Tuple<double, double>> WindowCrossings(Tuple<double, double> point, OneForm xOneForm)
+        private LineSeries WindowCrossings(OneForm xOneForm, int length)
         {
             var allCrossings = new List<Tuple<double, double>>();
             var windowEnteringCrossings = new List<Tuple<double, double>>();
             foreach (var constraint in Constraints)
             {
-                allCrossings.Add(Intersection(point, constraint));
+                allCrossings.Add(Intersection(xOneForm, length, constraint));
             }
             foreach(var pt in allCrossings)
             {
                 if (Constraints.Any(c => c.Violate(pt))) continue;
                 windowEnteringCrossings.Add(pt);
             }
-            return windowEnteringCrossings;
+            var lineSeries = new LineSeries()
+            {
+                LineStyle = (length == 0 ? LineStyle.Solid : LineStyle.Dash),
+                Color = (length == 0 ? OxyColors.Black : OxyColors.Gray),
+                StrokeThickness = (length == 0 ? 2 : 0.5)
+            };
+            windowEnteringCrossings.ForEach(c => lineSeries.Points.Add(new DataPoint(c.Item1, c.Item2)));
+            return lineSeries;
         }
 
-        private Tuple<double, double> Intersection(Tuple<double, double> point, Constraint constraint)
+        private Tuple<double, double> Intersection(OneForm oneForm, int lineLength, Constraint constraint)
         {
             // intersection betwen the line normal to a vector from the origin to point and the constraint
-            var lineLength = Math.Sqrt(point.Item1 * point.Item1 + point.Item2 * point.Item2);
-            var y = point.Item1 * constraint.Length * constraint.Length - constraint.X * lineLength * lineLength;
-            y /= (point.Item1 * constraint.Y - point.Item2 * constraint.X);
-            var x = (lineLength - point.Item2 * y ) / point.Item1;
+            var y = oneForm.UnitVector[0] * constraint.Length - constraint.X * lineLength;
+            y /= (oneForm.UnitVector[0] * constraint.UnitVector[1]- oneForm.UnitVector[1] * constraint.UnitVector[0]);
+            var x = (lineLength - oneForm.UnitVector[1] * y ) / oneForm.UnitVector[0];
             return new Tuple<double, double>(x, y);
         }
 
-        private bool EntersWindow(Tuple<double, double> point, OneForm xOneForm)
+        private bool EntersWindow(OneForm xOneForm, int length)
         {
             var entersWindow = false;
             foreach (var constraint in Constraints)
             {
-                var intersection = Intersection(point, constraint);
-                 bool outside = false;
+                var intersection = Intersection(xOneForm, length, constraint);
+                bool outside = false;
                 foreach(var c in Constraints)
                 {
                     if (c.Violate(intersection))
@@ -137,13 +137,6 @@ namespace LineProjection
                 }
                 if (outside == false) entersWindow = true;
             }
-
-            //Constraints.ForEach(constraint =>
-            //{
-                
-            //    if (Constraints.All(c => !c.Violate(intersection)))
-            //        entersWindow = true;
-            //});
             return entersWindow;
         }
 

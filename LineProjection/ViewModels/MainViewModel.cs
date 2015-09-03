@@ -124,8 +124,7 @@ namespace LineProjection.ViewModels
             CoordinateTransform.Series.Add(YOneFormSeries());
             foreach (var line in _model.Lines(XOneForm)) CoordinateTransform.Series.Add(line);
             foreach (var line in _model.Lines(YOneForm)) CoordinateTransform.Series.Add(line);
-            CoordinateTransform.Series.Add(XAxis());
-            CoordinateTransform.Series.Add(YAxis());
+            CoordinateTransform.Series.Add(VectorSeries(true));
             CoordinateTransform.InvalidatePlot(true);
         }
 
@@ -144,15 +143,12 @@ namespace LineProjection.ViewModels
         {
             var pm = new PlotModel() { Title = "Coordinate Transformation" };
 
-            //var xPrimeAxis = new LineSeries();
-            //var yPrimeAxis = new LineSeries();
             foreach (var line in _model.Lines(XOneForm)) pm.Series.Add(line);
             foreach (var line in _model.Lines(YOneForm)) pm.Series.Add(line);
 
-            pm.Series.Add(XAxis());
-            pm.Series.Add(YAxis());
             pm.Series.Add(XOneFormSeries());
             pm.Series.Add(YOneFormSeries());
+            pm.Series.Add(VectorSeries(true));
             pm.Axes.Add(X());
             pm.Axes.Add(Y());
 
@@ -258,8 +254,8 @@ namespace LineProjection.ViewModels
             x.Points.Add(new DataPoint(_model.Min, 0));
             x.Points.Add(new DataPoint(_model.Max, 0));
             x.MarkerType = MarkerType.None;
-            x.LineStyle = LineStyle.Dash;
-            x.Color = OxyColors.Gray;
+            x.LineStyle = LineStyle.Solid;
+            x.Color = OxyColors.Black;
             return x;
         }
 
@@ -269,8 +265,8 @@ namespace LineProjection.ViewModels
             x.Points.Add(new DataPoint(0, _model.Min));
             x.Points.Add(new DataPoint(0, _model.Max));
             x.MarkerType = MarkerType.None;
-            x.LineStyle = LineStyle.Dash;
-            x.Color = OxyColors.Gray;
+            x.LineStyle = LineStyle.Solid;
+            x.Color = OxyColors.Black;
             return x;
         }
 
