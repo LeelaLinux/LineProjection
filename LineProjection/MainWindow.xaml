@@ -12,11 +12,11 @@
             <TabItem Header="2x2 Matrix">
                 <Grid Background="#FFE5E5E5">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition/>
+                        <ColumnDefinition x:Name="col"/>
                         <ColumnDefinition/>
                         <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
-                    <oxy:PlotView Model="{Binding ControlPlot, UpdateSourceTrigger=PropertyChanged}"  Grid.Column="0"/>
+                    <oxy:PlotView Model="{Binding ControlPlot, UpdateSourceTrigger=PropertyChanged}" Grid.Column="0"/>
                     <oxy:PlotView Model="{Binding CoordinateTransform, UpdateSourceTrigger=PropertyChanged}"  Grid.Column="1"/>
                     <oxy:PlotView Model="{Binding VectorTransform, UpdateSourceTrigger=PropertyChanged}"  Grid.Column="2"/>
                 </Grid>

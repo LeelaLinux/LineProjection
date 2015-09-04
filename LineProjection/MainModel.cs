@@ -14,7 +14,8 @@ namespace LineProjection
     {
         private OneForm _xOneForm = new OneForm(0.0, 0.0);
         private OneForm _yOneForm = new OneForm(0.0, 0.0);
-        private Vector<double> _theVector = Vector<double>.Build.DenseOfArray(new[] { 0.0, 0.0 });
+        private Vector<double> _initialVector = Vector<double>.Build.DenseOfArray(new[] { 0.0, 0.0 });
+        private Vector<double> _finalVector = Vector<double>.Build.DenseOfArray(new[] { 0.0, 0.0 });
         private Matrix<double> _transform = Matrix<double>.Build.DenseOfArray(new[,] { { 0.0, 0.0 }, { 0.0, 0.0 } });
         public Projection Projection { get; set; }
         private Tuple<double, double> _zero = new  Tuple<double, double>(0.0, 0.0);
@@ -57,8 +58,7 @@ namespace LineProjection
         private void UpdateTransform()
         {
             Transform = Matrix<double>.Build.DenseOfRowVectors(_xOneForm.Vector, _yOneForm.Vector);
-            var test = Lines(XOneForm);
-
+            FinalVector = Transform.Multiply(InitialVector);
         }
 
         /// <summary>
@@ -79,6 +79,38 @@ namespace LineProjection
             {
                 yield return WindowCrossings(oneForm, length--);
             }
+        }
+
+        public IEnumerable<LineSeries> TransformedCoordinates()
+        {
+            var line1 = new LineSeries() { StrokeThickness = 8, Color = OxyColors.Red};
+            line1.Points.Add(new DataPoint(0, 0));
+            var y = (InitialVector[0] * XOneForm.X + InitialVector[1] * XOneForm.Y);
+            y /= (-YOneForm.Y * XOneForm.X / YOneForm.X + XOneForm.Y);
+            var x = - y * YOneForm.Y / YOneForm.X;
+            line1.Points.Add(new DataPoint(x, y));
+            yield return line1;
+            var line2 = new LineSeries() { StrokeThickness = 8, Color = OxyColors.Red };
+            line2.Points.Clear();
+            line2.Points.Add(new DataPoint(0, 0));
+            y = (InitialVector[0] * YOneForm.X + InitialVector[1] * YOneForm.Y);
+            y /= (-XOneForm.Y * YOneForm.X / XOneForm.X + YOneForm.Y);
+            x = - y * XOneForm.Y / XOneForm.X;
+            line2.Points.Add(new DataPoint(x, y));
+            yield return line2;
+        }
+
+        public IEnumerable<LineSeries> VectorCoordinates()
+        {
+            var line1 = new LineSeries() { StrokeThickness = 8, Color = OxyColors.Red };
+            line1.Points.Add(new DataPoint(0, 0));
+            line1.Points.Add(new DataPoint(FinalVector[0], 0));
+            yield return line1;
+            var line2 = new LineSeries() { StrokeThickness = 8, Color = OxyColors.Red };
+            line2.Points.Clear();
+            line2.Points.Add(new DataPoint(0, 0));
+            line2.Points.Add(new DataPoint(0, FinalVector[1]));
+            yield return line2;
         }
 
         private Tuple<double, double> Decrement(OneForm xOneForm, Tuple<double, double> point)
@@ -114,12 +146,12 @@ namespace LineProjection
             return lineSeries;
         }
 
-        private Tuple<double, double> Intersection(OneForm oneForm, int lineLength, Constraint constraint)
+        private Tuple<double, double> Intersection(OneForm o, int z, Constraint c)
         {
             // intersection betwen the line normal to a vector from the origin to point and the constraint
-            var y = oneForm.UnitVector[0] * constraint.Length - constraint.X * lineLength;
-            y /= (oneForm.UnitVector[0] * constraint.UnitVector[1]- oneForm.UnitVector[1] * constraint.UnitVector[0]);
-            var x = (lineLength - oneForm.UnitVector[1] * y ) / oneForm.UnitVector[0];
+            var y = o.X * c.Length * c.Length - c.X * z;
+            y /= (o.X * c.Y - c.X * o.Y);
+            var x = (z - o.Y * y ) / o.X;
             return new Tuple<double, double>(x, y);
         }
 
@@ -160,12 +192,22 @@ namespace LineProjection
             }
         }
 
-        public Vector<double> TheVector
+        public Vector<double> InitialVector
         {
-            get { return _theVector; }
+            get { return _initialVector; }
             set
             {
-                _theVector = value;
+                _initialVector = value;
+                UpdateTransform();
+            }
+        }
+
+        public Vector<double> FinalVector
+        {
+            get { return _finalVector; }
+            set
+            {
+                _finalVector = value;
             }
         }
 

@@ -14,6 +14,10 @@ namespace LineProjection.ViewModels
 {
     public class MainViewModel
     {
+        // todo -- add bold x, y lines to show coordinates of vector
+        // redraw lines when mouse is lifted
+        // scale graphs so they stay square
+        // add lines to control and vector plots
         public event PropertyChangedEventHandler PropertyChanged;
 
         private PlotModel _controlPlot;
@@ -124,7 +128,8 @@ namespace LineProjection.ViewModels
             CoordinateTransform.Series.Add(YOneFormSeries());
             foreach (var line in _model.Lines(XOneForm)) CoordinateTransform.Series.Add(line);
             foreach (var line in _model.Lines(YOneForm)) CoordinateTransform.Series.Add(line);
-            CoordinateTransform.Series.Add(VectorSeries(true));
+            foreach (var line in _model.TransformedCoordinates()) CoordinateTransform.Series.Add(line);
+            CoordinateTransform.Series.Add(VectorSeries());
             CoordinateTransform.InvalidatePlot(true);
         }
 
@@ -133,6 +138,7 @@ namespace LineProjection.ViewModels
             VectorTransform.Series.Clear();
             VectorTransform.Series.Add(XOneFormSeries());
             VectorTransform.Series.Add(YOneFormSeries());
+            foreach (var line in _model.VectorCoordinates()) VectorTransform.Series.Add(line);
             VectorTransform.Series.Add(VectorSeries(true));
             VectorTransform.Series.Add(XAxis());
             VectorTransform.Series.Add(YAxis());
@@ -360,10 +366,10 @@ namespace LineProjection.ViewModels
 
         public Vector<double> TheVector
         {
-            get { return _model.TheVector; }
+            get { return _model.InitialVector; }
             set
             {
-                _model.TheVector = value;
+                _model.InitialVector = value;
                 OnPropertyChanged("TheVector");
             }
         }
